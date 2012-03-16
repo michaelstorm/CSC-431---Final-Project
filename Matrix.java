@@ -1,3 +1,8 @@
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 class Matrix {
 
     //Class variables
@@ -259,6 +264,14 @@ class Matrix {
 	return true;
     }
 
+    public static boolean is_almost_zero(Matrix matrix) {
+      return is_almost_zero(matrix, 0.0000001);
+    }
+
+    public static boolean is_almost_zero(Matrix matrix, double ap) {
+      return is_almost_zero(matrix, ap, 0.0000001);
+    }
+
     /*
      * def is_almost_zero(A, ap=1e-6, rp=1e-4):
      *     for r in xrange(A.rows):
@@ -269,11 +282,6 @@ class Matrix {
      *     return True
      */
     public static boolean is_almost_zero(Matrix matrix, double ap, double rp) {
-	if (ap <= 0)
-	    ap = 0.000001;
-	if (rp <= 0)
-	    rp = 0.0001;
-
 	for (int r = 0; r < matrix.rows-1; r++) {
 	    for (int c = 0; c < matrix.cols; c++) {
 		double delta = Math.abs(matrix.getItem(r, c) - matrix.getItem(c, r));
@@ -282,6 +290,58 @@ class Matrix {
 	    }
 	}
 	return true;
+    }
+
+    public static double norm(Matrix matrix) {
+      return norm(matrix, 1);
+    }
+
+    /*
+     * def norm(A,p=1):
+     *   if isinstance(A,(list,tuple)):
+     *     return sum(x**p for x in A)**(1.0/p)
+     *   elif isinstance(A,Matrix):
+     *     if A.rows==1 or A.cols==1:
+     *        return sum(norm(A[r,c])**p \
+     *          for r in xrange(A.rows) \
+     *          for c in xrange(A.cols))**(1.0/p)
+     *     elif p==1:
+     *       return max([sum(norm(A[r,c]) \
+     *         for r in xrange(A.rows)) \
+     *         for c in xrange(A.cols)])
+     *     else:
+     *       raise NotImplementedError
+     *   else:
+     *     return abs(A)
+     */
+    public static double norm(Matrix matrix, int p) {
+      if (matrix.rows == 1 || matrix.cols == 1) {
+        double n = 0.;
+        for (int r = 0; r < matrix.rows; r++)
+          for (int c = 0; c < matrix.cols; c++)
+            n += Math.pow(matrix.getItem(r, c), p);
+        return Math.pow(n, (1./((double)p)));
+      }
+      else if (p == 1) {
+        List<Double> norms = new ArrayList<Double>();
+        for (int r = 0; r < matrix.rows; r++)
+          for (int c = 0; c < matrix.cols; c++)
+            norms.add(norm(matrix.getItem(r, c)));
+        Collections.sort(norms);
+        return norms.get(norms.size()-1);
+      }
+      else
+        throw new RuntimeException("Not implemented");
+    }
+
+    public static double norm(double[] list) {
+      double[] copy = (double[])list.clone();
+      Arrays.sort(copy);
+      return copy[copy.length-1];
+    }
+    
+    public static double norm(double val) {
+      return Math.abs(val);
     }
 
     public static void main(String[] args){
@@ -327,5 +387,8 @@ class Matrix {
 
   double[] matC_values = { 2, 3, 4 };
   mult(matA, matC_values).printMatrix();	
+
+  System.out.println(norm(matA));
+  System.out.println(norm(matB));
     }
 }
