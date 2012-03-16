@@ -171,9 +171,7 @@ class Matrix {
       B_values_fill[i][0] = B_values[i];
 
   Matrix B = new Matrix(B_values.length, 1, B_values_fill);
-  System.out.println("B:");
   B.printMatrix();
-  System.out.println();
   return mult(A, B);
     }
 
@@ -231,6 +229,60 @@ class Matrix {
 	}
 
     }    
+
+    /*
+     * def is_almost_symmetric(A, ap=1e-6, rp=1e-4):
+     *     if A.rows != A.cols: return False
+     *     for r in xrange(A.rows-1):
+     *         for c in xrange(r):
+     *             delta = abs(A[r,c]-A[c,r])
+     *             if delta>ap and delta>max(abs(A[r,c]),abs(A[c,r]))*rp:
+     *                 return False
+     *     return True
+     */
+    public static boolean is_almost_symmetric(Matrix matrix, double ap, double rp) {
+	if (ap <= 0)
+	    ap = 0.000001;
+	if (rp <= 0)
+	    rp = 0.0001;
+
+	if (matrix.rows != matrix.cols)
+	    return false;
+
+	for (int r = 0; r < matrix.rows-1; r++) {
+	    for (int c = 0; c < r; c++) {
+	        double delta = Math.abs(matrix.getItem(r, c) - matrix.getItem(c, r));
+		if (delta > ap && delta > Math.max(Math.abs(matrix.getItem(r, c)), Math.abs(matrix.getItem(c, r)))*rp)
+		    return false;
+	    }
+	}
+	return true;
+    }
+
+    /*
+     * def is_almost_zero(A, ap=1e-6, rp=1e-4):
+     *     for r in xrange(A.rows):
+     *         for c in xrange(A.cols):
+     *             delta = abs(A[r,c]-A[c,r])
+     *             if delta>ap and delta>max(abs(A[r,c]),abs(A[c,r]))*rp:
+     *                 return False
+     *     return True
+     */
+    public static boolean is_almost_zero(Matrix matrix, double ap, double rp) {
+	if (ap <= 0)
+	    ap = 0.000001;
+	if (rp <= 0)
+	    rp = 0.0001;
+
+	for (int r = 0; r < matrix.rows-1; r++) {
+	    for (int c = 0; c < matrix.cols; c++) {
+		double delta = Math.abs(matrix.getItem(r, c) - matrix.getItem(c, r));
+		if (delta > ap && delta > Math.max(Math.abs(matrix.getItem(r, c)), Math.abs(matrix.getItem(c, r)))*rp)
+		    return false;
+	    }
+	}
+	return true;
+    }
 
     public static void main(String[] args){
 
