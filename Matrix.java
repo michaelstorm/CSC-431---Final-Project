@@ -623,6 +623,105 @@ class Matrix {
       throw new RuntimeException("no convergence");
     }
 
+    public static double optimize_newton(Function f, double x) {
+      return optimize_newton(f, x, 0.0000001);
+    } 
+
+    public static double optimize_newton(Function f, double x, double ap) {
+      return optimize_newton(f, x, ap, 0.00001);
+    } 
+
+    public static double optimize_newton(Function f, double x, double ap, double rp) {
+      return optimize_newton(f, x, ap, rp, 20);
+    } 
+
+    /*
+     * def optimize_newton(f, x, ap=1e-6, rp=1e-4, ns=20):
+     * x = float(x) # make sure it is not int
+     * for k in xrange(ns):
+     *   (Dfx, DDfx) = (D(f)(x), DD(f)(x))
+     *   if Dfx==0: return x
+     *   if norm(DDfx) < ap:
+     *     raise ArithmeticError, 'unstable solution'
+     *   (x_old, x) = (x, x-Dfx/DDfx)
+     *   if norm(x-x_old)<max(ap,norm(x)*rp): return x
+     * raise ArithmeticError, 'no convergence'
+     */
+    public static double optimize_newton(Function f, double x, double ap, double rp, int ns) {
+      for (int k = 0; k < ns; k++) {
+        double Dfx = new Derivative(f).execute(x);
+        double DDfx = new Derivative(new Derivative(f)).execute(x);
+        if (norm(DDfx) < ap)
+          throw new RuntimeException("unstable solution");
+        double x_old = x;
+        x = x-Dfx/DDfx;
+        if (norm(x-x_old) < Math.max(ap, norm(x)*rp))
+          return x;
+      }
+      throw new RuntimeException("no convergence");
+    }
+
+    public static double optimize_golden_search(Function f, double a, double b) {
+      return optimize_golden_search(f, a, b, 0.0000001);
+    }
+    
+    public static double optimize_golden_search(Function f, double a, double b, double ap) {
+      return optimize_golden_search(f, a, b, ap, 0.00001);
+    }
+
+    public static double optimize_golden_search(Function f, double a, double b, double ap, double rp) {
+      return optimize_golden_search(f, a, b, ap, rp, 100);
+    }
+    
+    /*
+     * def optimize_golden_search(f, a, b, ap=1e-6, rp=1e-4, ns=100):
+     *   a,b=float(a),float(b)
+     *   tau = (sqrt(5.0)-1.0)/2.0
+     *   x1, x2 = a+(1.0-tau)*(b-a), a+tau*(b-a)
+     *   fa, f1, f2, fb = f(a), f(x1), f(x2), f(b)
+     *   for k in xrange(ns):
+     *     if f1 > f2:
+     *       a, fa, x1, f1 = x1, f1, x2, f2
+     *       x2 = a+tau*(b-a)
+     *       f2 = f(x2)
+     *     else:
+     *       b, fb, x2, f2 = x2, f2, x1, f1
+     *       x1 = a+(1.0-tau)*(b-a)
+     *       f1 = f(x1)
+     *     if k>2 and norm(b-a)<max(ap,norm(b)*rp): return b
+     * raise ArithmeticError, 'no convergence'
+     */
+    public static double optimize_golden_search(Function f, double a, double b, double ap, double rp, int ns) {
+      double tau = (Math.sqrt(5.)-1.)/2.;
+      double x1 = a+(1.-tau)*(b-a);
+      double x2 = a+tau*(b-a);
+      double fa = f.execute(a);
+      double f1 = f.execute(x1);
+      double f2 = f.execute(x2);
+      double fb = f.execute(b);
+      for (int k = 0; k < ns; k++) {
+        if (f1 > f2) {
+          a = x1;
+          fa = f1;
+          x1 = x2;
+          f1 = f2;
+          x2 = a+tau*(b-a);
+          f2 = f.execute(x2);
+        }
+        else {
+          b = x2;
+          fb = f2;
+          x2 = x1;
+          f2 = f1;
+          x1 = a+(1.-tau)*(b-a);
+          f1 = f.execute(x1);
+        }
+        if (k > 2 && norm(b-a) > Math.max(ap, norm(b)*rp))
+          return b;
+      }
+      throw new RuntimeException("no convergence");
+    }
+
     /*
      * def is_almost_symmetric(A, ap=1e-6, rp=1e-4):
      *     if A.rows != A.cols: return False
@@ -816,6 +915,12 @@ class Matrix {
   System.out.println(point);
   System.out.print("optimize_secant: ");
   point = optimize_secant(f, 3.);
+  System.out.println(point);
+  System.out.print("optimize_newton: ");
+  point = optimize_newton(f, 3.);
+  System.out.println(point);
+  System.out.print("optimize_golden_search: ");
+  point = optimize_golden_search(f, 2., 5.);
   System.out.println(point);
     }
 }
