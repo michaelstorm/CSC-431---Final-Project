@@ -722,6 +722,103 @@ class Matrix {
       throw new RuntimeException("no convergence");
     }
 
+    public static double solve_fixed_point(Function f, double x) {
+      return solve_fixed_point(f, x, 0.0000001);
+    }
+
+    public static double solve_fixed_point(Function f, double x, double ap) {
+      return solve_fixed_point(f, x, ap, 0.00001);
+    }
+
+    public static double solve_fixed_point(Function f, double x, double ap, double rp) {
+      return solve_fixed_point(f, x, ap, rp, 100);
+    }
+
+    /*
+     * def solve_fixed_point(f, x, ap=1e-6, rp=1e-4, ns=100):
+     *   def g(x): return f(x)+x # f(x)=0 <=> g(x)=x
+     *   Dg = D(g)
+     *   for k in xrange(ns):
+     *     if abs(Dg(x)) >= 1:
+     *       raise ArithmeticError, 'error D(g)(x)>=1'
+     *     (x_old, x) = (x, g(x))
+     *     if k>2 and norm(x_old-x)<max(ap,norm(x)*rp):
+     *       return x
+     *   raise ArithmeticError, 'no convergence'
+     */
+    public static double solve_fixed_point(Function f_arg, double x, double ap, double rp, int ns) {
+      final Function f = f_arg;
+      Function g = new Function() {
+        public double execute(double x) {
+          return f.execute(x)+x;
+        }
+      };
+      Function Dg = new Derivative(g);
+      for (int k = 0; k < ns; k++) {
+        if (Math.abs(Dg.execute(x)) >= 1)
+          throw new RuntimeException("error D(g)(x)>=1");
+        double x_old = x;
+        x = g.execute(x);
+        if (k > 2 && norm(x_old-x) < Math.max(ap, norm(x)*rp))
+          return x;
+      }
+      throw new RuntimeException("no convergence");
+    }
+
+    public static double solve_bisection(Function f, double a, double b) {
+      return solve_bisection(f, a, b, 0.0000001);
+    }
+
+    public static double solve_bisection(Function f, double a, double b, double ap) {
+      return solve_bisection(f, a, b, ap, 0.00001);
+    }
+
+    public static double solve_bisection(Function f, double a, double b, double ap, double rp) {
+      return solve_bisection(f, a, b, ap, rp, 100);
+    }
+
+    /*
+     * def solve_bisection(f, a, b, ap=1e-6, rp=1e-4, ns=100):
+     *   fa, fb = f(a), f(b)
+     *   if fa == 0: return a
+     *   if fb == 0: return b
+     *   if fa*fb > 0:
+     *     raise ArithmeticError, 'f(a) and f(b) must have opposite sign'
+     *   for k in xrange(ns):
+     *     x = (a+b)/2
+     *     fx = f(x)
+     *     if fx==0 or norm(b-a)<max(ap,norm(x)*rp): return x
+     *     elif fx * fa < 0: (b,fb) = (x, fx)
+     *     else: (a,fa) = (x, fx)
+     *   raise ArithmeticError, 'no convergence'
+     */
+    public static double solve_bisection(Function f, double a, double b, double ap, double rp, int ns) {
+      double fa = f.execute(a);
+      double fb = f.execute(b);
+      if (fa == 0)
+        return a;
+      else if (fb == 0)
+        return b;
+      else if (fa*fb > 0)
+        throw new RuntimeException("f(a) and f(b) must have opposite sign");
+
+      for (int k = 0; k < ns; k++) {
+        double x = (a+b)/2.;
+        double fx = f.execute(x);
+        if (fx == 0 || norm(b-a) < Math.max(ap, norm(x)*rp))
+          return x;
+        else if (fx * fa < 0) {
+          b = x;
+          fb = fx;
+        }
+        else {
+          a = x;
+          fa = fx;
+        }
+      }
+      throw new RuntimeException("no convergence");
+    }
+
     /*
      * def is_almost_symmetric(A, ap=1e-6, rp=1e-4):
      *     if A.rows != A.cols: return False
@@ -921,6 +1018,18 @@ class Matrix {
   System.out.println(point);
   System.out.print("optimize_golden_search: ");
   point = optimize_golden_search(f, 2., 5.);
+  System.out.println(point);
+  System.out.print("solve_bisection: ");
+  point = solve_bisection(f, 1., 3.);
+  System.out.println(point);
+
+  Function f2 = new Function() {
+    public double execute(double a) {
+      return (a-2.)*(a-5.)/10.;
+    }
+  };
+  System.out.print("solve_fixed_point: ");
+  point = solve_fixed_point(f2, 1., 0.0000001, 0.);
   System.out.println(point);
     }
 }
